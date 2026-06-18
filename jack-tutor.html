@@ -4,92 +4,94 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Jack's Learning App</title>
+<!-- API key loaded from config.js — keep that file local, never upload to GitHub -->
+<script src="config.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
   :root {
-    --dirt: #1a1208; --mud: #2d1f0e; --bark: #3d2b14;
-    --rust: #c4521a; --orange: #e8701e; --gold: #f0a030;
-    --cream: #f5edd8; --offwhite: #faf6ee;
-    --green: #2d5016; --grass: #3d6b1e;
-    --grey: #8a7d6b; --light-grey: #d4c9b4;
+    --dirt:#1a1208; --mud:#2d1f0e; --bark:#3d2b14;
+    --rust:#c4521a; --orange:#e8701e; --gold:#f0a030;
+    --cream:#f5edd8; --offwhite:#faf6ee;
+    --green:#2d5016; --grass:#3d6b1e;
+    --grey:#8a7d6b; --light-grey:#d4c9b4;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Barlow', sans-serif; background: var(--dirt); color: var(--cream); min-height: 100vh; overflow-x: hidden; }
-  body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(ellipse at 20% 50%, rgba(196,82,26,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(45,80,22,0.12) 0%, transparent 50%); pointer-events: none; z-index: 0; }
-  .app-shell { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 0 16px 40px; }
-  .header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 14px; border-bottom: 2px solid var(--bark); margin-bottom: 24px; }
-  .logo-main { font-family: 'Barlow Condensed', sans-serif; font-size: 2rem; font-weight: 900; color: var(--orange); letter-spacing: -0.5px; line-height: 1; text-transform: uppercase; }
-  .logo-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 0.95rem; font-weight: 600; color: var(--grey); letter-spacing: 2px; text-transform: uppercase; margin-left: 8px; }
-  .xp-bar-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-  .xp-label { font-size: 0.7rem; font-weight: 600; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; }
-  .xp-track { width: 140px; height: 10px; background: var(--bark); border-radius: 5px; overflow: hidden; }
-  .xp-fill { height: 100%; background: linear-gradient(90deg, var(--rust), var(--gold)); border-radius: 5px; transition: width 0.6s ease; width: 0%; }
-  .xp-count { font-size: 0.72rem; color: var(--grey); }
-  .subject-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 22px; }
-  .tab-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 7px 14px; border: 2px solid var(--bark); background: var(--mud); color: var(--grey); border-radius: 4px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-  .tab-btn:hover { border-color: var(--rust); color: var(--cream); }
-  .tab-btn.active { background: var(--rust); border-color: var(--orange); color: white; }
-  .mode-bar { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
-  .mode-btn { font-family: 'Barlow Condensed', sans-serif; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; padding: 5px 11px; border: 1px solid var(--bark); background: transparent; color: var(--grey); border-radius: 3px; cursor: pointer; transition: all 0.2s; }
-  .mode-btn:hover { color: var(--cream); border-color: var(--grey); }
-  .mode-btn.active { background: var(--bark); color: var(--gold); border-color: var(--gold); }
-  .chat-window { background: var(--mud); border: 2px solid var(--bark); border-radius: 8px; min-height: 420px; max-height: 520px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
-  .chat-window::-webkit-scrollbar { width: 6px; }
-  .chat-window::-webkit-scrollbar-track { background: var(--bark); }
-  .chat-window::-webkit-scrollbar-thumb { background: var(--rust); border-radius: 3px; }
-  .msg { display: flex; gap: 10px; animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-  .msg.user { flex-direction: row-reverse; }
-  .msg-avatar { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; }
-  .msg.tutor .msg-avatar { background: var(--rust); color: white; font-family: 'Barlow Condensed', sans-serif; }
-  .msg.user .msg-avatar { background: var(--green); color: white; }
-  .msg-bubble { max-width: 75%; padding: 12px 15px; border-radius: 8px; font-size: 0.95rem; line-height: 1.55; }
-  .msg.tutor .msg-bubble { background: var(--bark); color: var(--cream); border-radius: 2px 8px 8px 8px; }
-  .msg.user .msg-bubble { background: var(--green); color: var(--offwhite); border-radius: 8px 2px 8px 8px; }
-  .msg-bubble strong { color: var(--gold); }
-  .story-card { background: var(--bark); border-left: 4px solid var(--orange); border-radius: 0 6px 6px 0; padding: 14px 16px; font-size: 0.93rem; line-height: 1.65; color: var(--cream); margin: 4px 0; max-width: 90%; }
-  .story-title { font-family: 'Barlow Condensed', sans-serif; font-size: 1.05rem; font-weight: 700; color: var(--gold); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
-  .vocab-card { background: rgba(45,80,22,0.3); border: 1px solid var(--grass); border-radius: 6px; padding: 10px 14px; margin: 4px 0; }
-  .vocab-word { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
-  .vocab-def { font-size: 0.88rem; color: var(--light-grey); margin-top: 3px; line-height: 1.4; }
-  .q-card { background: rgba(196,82,26,0.12); border: 1px solid rgba(196,82,26,0.4); border-radius: 6px; padding: 10px 14px; margin: 4px 0; font-size: 0.9rem; color: var(--cream); }
-  .q-label { font-size: 0.72rem; font-weight: 700; color: var(--orange); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 4px; }
-  .reward-pop { display: flex; align-items: center; gap: 8px; background: rgba(240,160,48,0.15); border: 1px solid var(--gold); border-radius: 6px; padding: 8px 14px; font-size: 0.88rem; color: var(--gold); font-weight: 600; animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); margin-left: 46px; }
-  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .typing-indicator { display: flex; gap: 5px; align-items: center; padding: 10px 14px; background: var(--bark); border-radius: 8px; width: fit-content; }
-  .typing-dot { width: 7px; height: 7px; background: var(--grey); border-radius: 50%; animation: bounce 1.2s infinite; }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
-  .input-area { margin-top: 14px; display: flex; gap: 10px; align-items: flex-end; }
-  .input-wrap { flex: 1; background: var(--mud); border: 2px solid var(--bark); border-radius: 8px; transition: border-color 0.2s; overflow: hidden; }
-  .input-wrap:focus-within { border-color: var(--rust); }
-  #user-input { width: 100%; background: transparent; border: none; color: var(--cream); font-family: 'Barlow', sans-serif; font-size: 0.95rem; padding: 12px 14px; resize: none; outline: none; min-height: 50px; max-height: 120px; }
-  #user-input::placeholder { color: var(--grey); }
-  .send-btn { background: var(--rust); border: none; border-radius: 8px; width: 50px; height: 50px; cursor: pointer; color: white; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.1s; flex-shrink: 0; }
-  .send-btn:hover { background: var(--orange); }
-  .send-btn:active { transform: scale(0.95); }
-  .send-btn:disabled { background: var(--bark); cursor: not-allowed; }
-  .stats-bar { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
-  .stat-pill { display: flex; align-items: center; gap: 6px; background: var(--mud); border: 1px solid var(--bark); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; color: var(--grey); }
-  .stat-pill .stat-val { color: var(--cream); font-weight: 600; }
-  .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--grey); margin-top: 8px; }
-  .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--grey); }
-  .sync-dot.syncing { background: var(--gold); animation: pulse 1s infinite; }
-  .sync-dot.synced { background: var(--grass); }
-  .sync-dot.error { background: #c0392b; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  #welcome-screen { text-align: center; padding: 40px 20px; }
-  .welcome-icon { font-size: 3rem; margin-bottom: 16px; display: block; }
-  .welcome-title { font-family: 'Barlow Condensed', sans-serif; font-size: 2.5rem; font-weight: 900; color: var(--orange); text-transform: uppercase; margin-bottom: 8px; }
-  .welcome-sub { color: var(--grey); font-size: 1rem; margin-bottom: 28px; line-height: 1.5; }
-  .name-input-wrap { display: flex; gap: 10px; max-width: 340px; margin: 0 auto; justify-content: center; }
-  .name-field { flex: 1; background: var(--mud); border: 2px solid var(--bark); border-radius: 6px; color: var(--cream); font-family: 'Barlow', sans-serif; font-size: 1rem; padding: 10px 14px; outline: none; transition: border-color 0.2s; }
-  .name-field:focus { border-color: var(--rust); }
-  .start-btn { background: var(--rust); border: none; border-radius: 6px; color: white; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 10px 20px; cursor: pointer; transition: background 0.2s; }
-  .start-btn:hover { background: var(--orange); }
-  .hidden { display: none !important; }
-  .footer-note { text-align: center; color: var(--bark); font-size: 0.72rem; margin-top: 24px; letter-spacing: 0.5px; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Barlow',sans-serif;background:var(--dirt);color:var(--cream);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse at 20% 50%,rgba(196,82,26,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(45,80,22,0.12) 0%,transparent 50%);pointer-events:none;z-index:0;}
+  .app-shell{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 16px 40px;}
+  .header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 14px;border-bottom:2px solid var(--bark);margin-bottom:24px;}
+  .logo-main{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:900;color:var(--orange);letter-spacing:-0.5px;line-height:1;text-transform:uppercase;}
+  .logo-sub{font-family:'Barlow Condensed',sans-serif;font-size:0.95rem;font-weight:600;color:var(--grey);letter-spacing:2px;text-transform:uppercase;margin-left:8px;}
+  .xp-bar-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+  .xp-label{font-size:0.7rem;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;}
+  .xp-track{width:140px;height:10px;background:var(--bark);border-radius:5px;overflow:hidden;}
+  .xp-fill{height:100%;background:linear-gradient(90deg,var(--rust),var(--gold));border-radius:5px;transition:width 0.6s ease;width:0%;}
+  .xp-count{font-size:0.72rem;color:var(--grey);}
+  .subject-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px;}
+  .tab-btn{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:7px 14px;border:2px solid var(--bark);background:var(--mud);color:var(--grey);border-radius:4px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:5px;}
+  .tab-btn:hover{border-color:var(--rust);color:var(--cream);}
+  .tab-btn.active{background:var(--rust);border-color:var(--orange);color:white;}
+  .mode-bar{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .mode-btn{font-family:'Barlow Condensed',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;padding:5px 11px;border:1px solid var(--bark);background:transparent;color:var(--grey);border-radius:3px;cursor:pointer;transition:all 0.2s;}
+  .mode-btn:hover{color:var(--cream);border-color:var(--grey);}
+  .mode-btn.active{background:var(--bark);color:var(--gold);border-color:var(--gold);}
+  .chat-window{background:var(--mud);border:2px solid var(--bark);border-radius:8px;min-height:420px;max-height:520px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth;}
+  .chat-window::-webkit-scrollbar{width:6px;}
+  .chat-window::-webkit-scrollbar-track{background:var(--bark);}
+  .chat-window::-webkit-scrollbar-thumb{background:var(--rust);border-radius:3px;}
+  .msg{display:flex;gap:10px;animation:fadeIn 0.3s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .msg.user{flex-direction:row-reverse;}
+  .msg-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;}
+  .msg.tutor .msg-avatar{background:var(--rust);color:white;font-family:'Barlow Condensed',sans-serif;}
+  .msg.user .msg-avatar{background:var(--green);color:white;}
+  .msg-bubble{max-width:75%;padding:12px 15px;border-radius:8px;font-size:0.95rem;line-height:1.55;}
+  .msg.tutor .msg-bubble{background:var(--bark);color:var(--cream);border-radius:2px 8px 8px 8px;}
+  .msg.user .msg-bubble{background:var(--green);color:var(--offwhite);border-radius:8px 2px 8px 8px;}
+  .msg-bubble strong{color:var(--gold);}
+  .story-card{background:var(--bark);border-left:4px solid var(--orange);border-radius:0 6px 6px 0;padding:14px 16px;font-size:0.93rem;line-height:1.65;color:var(--cream);margin:4px 0;max-width:90%;}
+  .story-title{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;color:var(--gold);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;}
+  .vocab-card{background:rgba(45,80,22,0.3);border:1px solid var(--grass);border-radius:6px;padding:10px 14px;margin:4px 0;}
+  .vocab-word{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;color:var(--gold);text-transform:uppercase;letter-spacing:1px;}
+  .vocab-def{font-size:0.88rem;color:var(--light-grey);margin-top:3px;line-height:1.4;}
+  .q-card{background:rgba(196,82,26,0.12);border:1px solid rgba(196,82,26,0.4);border-radius:6px;padding:10px 14px;margin:4px 0;font-size:0.9rem;color:var(--cream);}
+  .q-label{font-size:0.72rem;font-weight:700;color:var(--orange);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+  .reward-pop{display:flex;align-items:center;gap:8px;background:rgba(240,160,48,0.15);border:1px solid var(--gold);border-radius:6px;padding:8px 14px;font-size:0.88rem;color:var(--gold);font-weight:600;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);margin-left:46px;}
+  @keyframes popIn{from{transform:scale(0.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .typing-indicator{display:flex;gap:5px;align-items:center;padding:10px 14px;background:var(--bark);border-radius:8px;width:fit-content;}
+  .typing-dot{width:7px;height:7px;background:var(--grey);border-radius:50%;animation:bounce 1.2s infinite;}
+  .typing-dot:nth-child(2){animation-delay:0.2s;}
+  .typing-dot:nth-child(3){animation-delay:0.4s;}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);}}
+  .input-area{margin-top:14px;display:flex;gap:10px;align-items:flex-end;}
+  .input-wrap{flex:1;background:var(--mud);border:2px solid var(--bark);border-radius:8px;transition:border-color 0.2s;overflow:hidden;}
+  .input-wrap:focus-within{border-color:var(--rust);}
+  #user-input{width:100%;background:transparent;border:none;color:var(--cream);font-family:'Barlow',sans-serif;font-size:0.95rem;padding:12px 14px;resize:none;outline:none;min-height:50px;max-height:120px;}
+  #user-input::placeholder{color:var(--grey);}
+  .send-btn{background:var(--rust);border:none;border-radius:8px;width:50px;height:50px;cursor:pointer;color:white;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.1s;flex-shrink:0;}
+  .send-btn:hover{background:var(--orange);}
+  .send-btn:active{transform:scale(0.95);}
+  .send-btn:disabled{background:var(--bark);cursor:not-allowed;}
+  .stats-bar{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;}
+  .stat-pill{display:flex;align-items:center;gap:6px;background:var(--mud);border:1px solid var(--bark);border-radius:20px;padding:5px 12px;font-size:0.78rem;color:var(--grey);}
+  .stat-pill .stat-val{color:var(--cream);font-weight:600;}
+  .sync-indicator{display:flex;align-items:center;gap:6px;font-size:0.72rem;color:var(--grey);margin-top:8px;}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--grey);}
+  .sync-dot.syncing{background:var(--gold);animation:pulse 1s infinite;}
+  .sync-dot.synced{background:var(--grass);}
+  .sync-dot.error{background:#c0392b;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  #welcome-screen{text-align:center;padding:40px 20px;}
+  .welcome-icon{font-size:3rem;margin-bottom:16px;display:block;}
+  .welcome-title{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:900;color:var(--orange);text-transform:uppercase;margin-bottom:8px;}
+  .welcome-sub{color:var(--grey);font-size:1rem;margin-bottom:28px;line-height:1.5;}
+  .name-input-wrap{display:flex;gap:10px;max-width:340px;margin:0 auto;justify-content:center;}
+  .name-field{flex:1;background:var(--mud);border:2px solid var(--bark);border-radius:6px;color:var(--cream);font-family:'Barlow',sans-serif;font-size:1rem;padding:10px 14px;outline:none;transition:border-color 0.2s;}
+  .name-field:focus{border-color:var(--rust);}
+  .start-btn{background:var(--rust);border:none;border-radius:6px;color:white;font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 20px;cursor:pointer;transition:background 0.2s;}
+  .start-btn:hover{background:var(--orange);}
+  .hidden{display:none!important;}
+  .footer-note{text-align:center;color:var(--bark);font-size:0.72rem;margin-top:24px;letter-spacing:0.5px;}
 </style>
 </head>
 <body>
@@ -111,19 +113,19 @@
     <div class="welcome-title">Hey! Let's Go.</div>
     <div class="welcome-sub">Your tutor's here. No boring stuff, promise.<br>Type your name to kick things off.</div>
     <div class="name-input-wrap">
-      <input class="name-field" id="name-field" type="text" placeholder="Your name..." maxlength="30" />
+      <input class="name-field" id="name-field" type="text" placeholder="Your name..." maxlength="30"/>
       <button class="start-btn" onclick="startSession()">Let's go →</button>
     </div>
   </div>
 
   <div id="main-app" class="hidden">
     <div class="subject-tabs">
-      <button class="tab-btn active" onclick="switchSubject('literacy','tab-literacy')" id="tab-literacy"><span>📖</span> Reading & Writing</button>
-      <button class="tab-btn" onclick="switchSubject('maths','tab-maths')" id="tab-maths"><span>🔢</span> Maths</button>
-      <button class="tab-btn" onclick="switchSubject('science','tab-science')" id="tab-science"><span>🔬</span> Science</button>
-      <button class="tab-btn" onclick="switchSubject('social','tab-social')" id="tab-social"><span>🌏</span> Social Studies</button>
-      <button class="tab-btn" onclick="switchSubject('health','tab-health')" id="tab-health"><span>💪</span> Health & PE</button>
-      <button class="tab-btn" onclick="switchSubject('tech','tab-tech')" id="tab-tech"><span>🔧</span> Tech & DT</button>
+      <button class="tab-btn active" onclick="switchSubject('literacy','tab-literacy')" id="tab-literacy">📖 Reading & Writing</button>
+      <button class="tab-btn" onclick="switchSubject('maths','tab-maths')" id="tab-maths">🔢 Maths</button>
+      <button class="tab-btn" onclick="switchSubject('science','tab-science')" id="tab-science">🔬 Science</button>
+      <button class="tab-btn" onclick="switchSubject('social','tab-social')" id="tab-social">🌏 Social Studies</button>
+      <button class="tab-btn" onclick="switchSubject('health','tab-health')" id="tab-health">💪 Health & PE</button>
+      <button class="tab-btn" onclick="switchSubject('tech','tab-tech')" id="tab-tech">🔧 Tech & DT</button>
     </div>
     <div class="mode-bar">
       <button class="mode-btn active" onclick="setMode('chat','mode-chat')" id="mode-chat">💬 Chat</button>
@@ -153,105 +155,42 @@
   </div>
   <div class="footer-note">Jack's Tutor App · Powered by AI</div>
 </div>
-
 <script>
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbzMbp2jP4QKzkCvLCo0nqZUUjw7RQzxfUQm4-XrNssNsmH3NFmQQwQ0PMNDjz_KIn4_Gg/exec";
+const SHEETS_URL="https://script.google.com/macros/s/AKfycbzMbp2jP4QKzkCvLCo0nqZUUjw7RQzxfUQm4-XrNssNsmH3NFmQQwQ0PMNDjz_KIn4_Gg/exec";
+const STATE={studentName:'Jack',currentSubject:'literacy',currentMode:'chat',xp:0,stars:0,streakDays:1,readingLevel:6,isLoading:false,conversationHistory:[]};
+const SUBJECTS={literacy:{label:'Reading & Writing'},maths:{label:'Maths'},science:{label:'Science'},social:{label:'Social Studies'},health:{label:'Health & PE'},tech:{label:'Tech & DT'}};
 
-const STATE = {
-  studentName: 'Jack',
-  currentSubject: 'literacy',
-  currentMode: 'chat',
-  xp: 0, stars: 0, streakDays: 1,
-  readingLevel: 6,
-  isLoading: false,
-  conversationHistory: [],
-};
+function getKey(){return window.ANTHROPIC_API_KEY||'';}
 
-const SUBJECTS = {
-  literacy: { label: 'Reading & Writing', icon: '📖' },
-  maths:    { label: 'Maths',             icon: '🔢' },
-  science:  { label: 'Science',           icon: '🔬' },
-  social:   { label: 'Social Studies',    icon: '🌏' },
-  health:   { label: 'Health & PE',       icon: '💪' },
-  tech:     { label: 'Tech & DT',         icon: '🔧' },
-};
+function setSyncStatus(s,m){document.getElementById('sync-dot').className='sync-dot '+s;document.getElementById('sync-label').textContent=m;}
 
-// ── SYNC ──────────────────────────────────────────────────
-function setSyncStatus(status, msg) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-label');
-  dot.className = 'sync-dot ' + status;
-  label.textContent = msg;
+async function saveToSheets(){
+  setSyncStatus('syncing','Saving...');
+  try{
+    await fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'save',payload:{studentName:STATE.studentName,xp:STATE.xp,stars:STATE.stars,streakDays:STATE.streakDays,readingLevel:STATE.readingLevel,currentSubject:STATE.currentSubject}})});
+    setSyncStatus('synced','Saved · '+new Date().toLocaleTimeString('en-NZ'));
+  }catch(e){setSyncStatus('error','Save failed');}
 }
 
-async function saveToSheets() {
-  setSyncStatus('syncing', 'Saving...');
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'save',
-        payload: {
-          studentName:    STATE.studentName,
-          xp:             STATE.xp,
-          stars:          STATE.stars,
-          streakDays:     STATE.streakDays,
-          readingLevel:   STATE.readingLevel,
-          currentSubject: STATE.currentSubject,
-        }
-      })
-    });
-    setSyncStatus('synced', 'Saved · ' + new Date().toLocaleTimeString('en-NZ'));
-  } catch(e) {
-    setSyncStatus('error', 'Save failed — check connection');
-  }
+async function logToSheets(role,text){
+  try{
+    await fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'log',payload:{time:new Date().toISOString(),role,subject:STATE.currentSubject,mode:STATE.currentMode,text:text.substring(0,800)}})});
+  }catch(e){}
 }
 
-async function logToSheets(role, text) {
-  try {
-    await fetch(SHEETS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'log',
-        payload: {
-          time:    new Date().toISOString(),
-          role:    role,
-          subject: STATE.currentSubject,
-          mode:    STATE.currentMode,
-          text:    text.substring(0, 800),
-        }
-      })
-    });
-  } catch(e) {}
+async function loadFromSheets(){
+  setSyncStatus('syncing','Loading your progress...');
+  try{
+    const res=await fetch(SHEETS_URL+'?action=load');
+    const data=await res.json();
+    if(data.found){STATE.xp=parseInt(data.xp)||0;STATE.stars=parseInt(data.stars)||0;STATE.streakDays=parseInt(data.streakDays)||1;STATE.readingLevel=parseInt(data.readingLevel)||6;updateXPBar();updateStatsBar();}
+    setSyncStatus('synced',data.found?"Progress loaded! Let's go!":"Fresh start — let's go!");
+  }catch(e){setSyncStatus('error','Could not load — starting fresh');}
 }
 
-async function loadFromSheets() {
-  setSyncStatus('syncing', 'Loading your progress...');
-  try {
-    const res = await fetch(SHEETS_URL + '?action=load');
-    const data = await res.json();
-    if (data.found) {
-      STATE.xp           = parseInt(data.xp)           || 0;
-      STATE.stars        = parseInt(data.stars)         || 0;
-      STATE.streakDays   = parseInt(data.streakDays)    || 1;
-      STATE.readingLevel = parseInt(data.readingLevel)  || 6;
-      updateXPBar();
-      updateStatsBar();
-      setSyncStatus('synced', 'Progress loaded!');
-    } else {
-      setSyncStatus('synced', 'Fresh start — let\'s go!');
-    }
-  } catch(e) {
-    setSyncStatus('error', 'Could not load — starting fresh');
-  }
-}
-
-// ── SYSTEM PROMPT ─────────────────────────────────────────
-function buildSystemPrompt() {
+function buildSystemPrompt(){
   return `You are an expert, encouraging, and adaptive tutor for ${STATE.studentName}, a 12-year-old New Zealand boy who struggles with reading, writing, and spelling but is not unintelligent. He is passionate about rugby, hunting, and motorbikes.
 
 PERSONALITY & TONE:
@@ -259,262 +198,227 @@ PERSONALITY & TONE:
 - Use straightforward New Zealand English. Occasional humour is great
 - Never embarrass him. Never correct everything at once
 - Keep energy up. Frame challenges as something to "crack"
-- Short responses — no walls of text
-- No condescension. No over-explaining
+- Short responses — no walls of text. No condescension.
 
 CURRENT STATE:
 - Subject: ${SUBJECTS[STATE.currentSubject].label}
 - Mode: ${STATE.currentMode}
-- Reading Level (estimated): Year ${STATE.readingLevel}
-- XP earned: ${STATE.xp}
+- Reading Level: Year ${STATE.readingLevel}
+- XP: ${STATE.xp}
 
 SUBJECT RULES:
-- Literacy: All stories about rugby, hunting (South Island high country), or motorbikes. Include vocab spotlights and comprehension questions. Writing prompts = 3–5 sentences
-- Maths: Real contexts — fuel costs, rugby stats, hunting distances, cooking quantities
-- Science: Engines, nature, biology of sport, hunting ecology, NZ environment
-- Social Studies: NZ geography, farming/rural life, Māori culture and outdoors
-- Health & PE: Training, nutrition for sport, mental health kept real
+- Literacy: Stories about rugby, hunting (South Island high country), or motorbikes. Vocab spotlights and comprehension questions. Writing prompts = 3–5 sentences
+- Maths: Real contexts — fuel costs, rugby stats, hunting distances
+- Science: Engines, nature, biology of sport, NZ environment
+- Social Studies: NZ geography, farming/rural life, Māori culture
+- Health & PE: Training, nutrition, mental health kept real
 - Tech & DT: Mechanics, engines, DIY, gear maintenance
 
 MODE RULES:
 - chat: Natural conversation, answer questions, guide learning
 - reading: Generate 8–12 sentence story at Year ${STATE.readingLevel} level. Follow with 2–3 comprehension questions and vocab spotlight (2–3 words)
-- spelling: Spelling activity using interest-based words. Game not a test. Fill-in-blank or use-in-a-sentence
+- spelling: Spelling activity using interest-based words. Game not a test
 - writing: Short low-pressure writing prompt. Ask for 3–5 sentences. Praise ideas first
-- quiz: 3–5 punchy questions on the current subject. Celebrate correct answers
+- quiz: 3–5 punchy questions. Celebrate correct answers
 
-FORMAT RULES:
+FORMAT:
 - Use **bold** for key words
-- Stories: prefix with STORY_START and end with STORY_END on their own lines
+- Stories: STORY_START ... STORY_END
 - Vocab: VOCAB: word | definition | example
-- Questions: Q1:, Q2:, Q3: prefixes
+- Questions: Q1:, Q2:, Q3:
 - XP reward: XP_REWARD: [number] [reason]
-- Max 250 words per response unless it's a story
-
-ASSESSMENT: Watch his spelling and reading difficulty. Simplify if he struggles. Push gently if he does well. His buy-in is everything — keep it real and interesting.`;
+- Max 250 words unless it's a story`;
 }
 
-// ── SESSION START ─────────────────────────────────────────
-function startSession() {
-  const nameVal = document.getElementById('name-field').value.trim();
-  if (!nameVal) { document.getElementById('name-field').focus(); return; }
-  STATE.studentName = nameVal;
+function startSession(){
+  const n=document.getElementById('name-field').value.trim();
+  if(!n){document.getElementById('name-field').focus();return;}
+  STATE.studentName=n;
   document.getElementById('welcome-screen').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
-
-  loadFromSheets().then(() => {
-    const opening = `Introduce yourself in a relaxed, friendly way — not like a teacher, more like a knowledgeable older mate. Welcome ${STATE.studentName} by name. Tell him there are no wrong answers and nothing to stress about. Ask what he's been up to lately (casual — rugby, hunting, motorbikes or anything). Keep it to 3–5 sentences. Don't mention the app or technology.`;
-    STATE.conversationHistory.push({ role: 'user', content: opening });
+  loadFromSheets().then(()=>{
+    const opening=`Introduce yourself in a relaxed friendly way — not like a teacher, more like a knowledgeable older mate. Welcome ${STATE.studentName} by name. Tell him there are no wrong answers and nothing to stress about. Ask what he's been up to lately (casual — rugby, hunting, motorbikes or anything). Keep it to 3–5 sentences. Don't mention the app or technology.`;
+    STATE.conversationHistory.push({role:'user',content:opening});
     callClaude(true);
   });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const f = document.getElementById('name-field');
-  if (f) f.addEventListener('keydown', e => { if (e.key === 'Enter') startSession(); });
+document.addEventListener('DOMContentLoaded',()=>{
+  const f=document.getElementById('name-field');
+  if(f)f.addEventListener('keydown',e=>{if(e.key==='Enter')startSession();});
 });
 
-// ── SUBJECT / MODE ────────────────────────────────────────
-function switchSubject(subj, tabId) {
-  STATE.currentSubject = subj;
-  STATE.currentMode = 'chat';
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+function switchSubject(subj,tabId){
+  STATE.currentSubject=subj;STATE.currentMode='chat';
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('mode-chat').classList.add('active');
   updateStatsBar();
-  const msg = `${STATE.studentName} just switched to ${SUBJECTS[subj].label}. Acknowledge this in 1–2 casual sentences and ask what they'd like to do or offer a suggestion.`;
-  addToHistory('user', msg);
+  addToHistory('user',`${STATE.studentName} just switched to ${SUBJECTS[subj].label}. Acknowledge in 1–2 casual sentences and ask what they'd like to do.`);
   callClaude(true);
 }
 
-function setMode(mode, modeId) {
-  STATE.currentMode = mode;
-  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+function setMode(mode,modeId){
+  STATE.currentMode=mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById(modeId).classList.add('active');
   updateStatsBar();
-  const msg = `${STATE.studentName} selected "${mode}" mode for ${SUBJECTS[STATE.currentSubject].label}. Jump straight into it based on your mode rules. No long preamble.`;
-  addToHistory('user', msg);
+  addToHistory('user',`${STATE.studentName} selected "${mode}" mode for ${SUBJECTS[STATE.currentSubject].label}. Jump straight into it. No long preamble.`);
   callClaude(true);
 }
 
-// ── MESSAGING ─────────────────────────────────────────────
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
-function sendMessage() {
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text || STATE.isLoading) return;
-  input.value = '';
-  input.style.height = 'auto';
-  appendMsg('user', text);
-  addToHistory('user', text);
-  logToSheets('student', text);
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+
+function sendMessage(){
+  const input=document.getElementById('user-input');
+  const text=input.value.trim();
+  if(!text||STATE.isLoading)return;
+  input.value='';input.style.height='auto';
+  appendMsg('user',text);
+  addToHistory('user',text);
+  logToSheets('student',text);
   callClaude();
 }
-function addToHistory(role, content) {
-  STATE.conversationHistory.push({ role, content });
-  if (STATE.conversationHistory.length > 30)
-    STATE.conversationHistory = STATE.conversationHistory.slice(-30);
+
+function addToHistory(role,content){
+  STATE.conversationHistory.push({role,content});
+  if(STATE.conversationHistory.length>30)STATE.conversationHistory=STATE.conversationHistory.slice(-30);
 }
 
-// ── CLAUDE API ────────────────────────────────────────────
-async function callClaude(hideUser = false) {
-  STATE.isLoading = true;
-  document.getElementById('send-btn').disabled = true;
-  const typingEl = showTyping();
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: buildSystemPrompt(),
-        messages: STATE.conversationHistory
-      })
+async function callClaude(hideUser=false){
+  STATE.isLoading=true;
+  document.getElementById('send-btn').disabled=true;
+  const typingEl=showTyping();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':getKey(),
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:buildSystemPrompt(),messages:STATE.conversationHistory})
     });
-    const data = await res.json();
-    const raw = data.content?.[0]?.text || "Something went sideways — try again?";
+    const data=await res.json();
+    const raw=data.content?.[0]?.text||"Something went sideways — try again?";
     typingEl.remove();
-    const parsed = parseResponse(raw);
+    const parsed=parseResponse(raw);
     displayParsedResponse(parsed);
-    addToHistory('assistant', raw);
-    logToSheets('tutor', raw);
-    if (parsed.xpReward) addXP(parsed.xpReward.amount, parsed.xpReward.reason);
+    addToHistory('assistant',raw);
+    logToSheets('tutor',raw);
+    if(parsed.xpReward)addXP(parsed.xpReward.amount,parsed.xpReward.reason);
     saveToSheets();
-  } catch(err) {
+  }catch(err){
     typingEl.remove();
-    appendMsg('tutor', "Oi, connection dropped. Give it another go.");
+    appendMsg('tutor',"Oi, something went wrong. Give it another go.");
+    console.error(err);
   }
-  STATE.isLoading = false;
-  document.getElementById('send-btn').disabled = false;
+  STATE.isLoading=false;
+  document.getElementById('send-btn').disabled=false;
   scrollChat();
 }
 
-// ── PARSER ────────────────────────────────────────────────
-function parseResponse(text) {
-  const result = { segments: [], xpReward: null };
-  let remaining = text;
-  const xpMatch = remaining.match(/XP_REWARD:\s*(\d+)\s+(.+?)(?:\n|$)/);
-  if (xpMatch) {
-    result.xpReward = { amount: parseInt(xpMatch[1]), reason: xpMatch[2] };
-    remaining = remaining.replace(xpMatch[0], '').trim();
-  }
-  if (remaining.includes('STORY_START')) {
-    const sm = remaining.match(/STORY_START\n?([\s\S]*?)\n?STORY_END/);
-    if (sm) {
-      const before = remaining.substring(0, remaining.indexOf('STORY_START')).trim();
-      const after  = remaining.substring(remaining.indexOf('STORY_END') + 9).trim();
-      if (before) result.segments.push({ type: 'text', content: before });
-      result.segments.push({ type: 'story', content: sm[1].trim() });
-      remaining = after;
+function parseResponse(text){
+  const result={segments:[],xpReward:null};
+  let remaining=text;
+  const xpMatch=remaining.match(/XP_REWARD:\s*(\d+)\s+(.+?)(?:\n|$)/);
+  if(xpMatch){result.xpReward={amount:parseInt(xpMatch[1]),reason:xpMatch[2]};remaining=remaining.replace(xpMatch[0],'').trim();}
+  if(remaining.includes('STORY_START')){
+    const sm=remaining.match(/STORY_START\n?([\s\S]*?)\n?STORY_END/);
+    if(sm){
+      const before=remaining.substring(0,remaining.indexOf('STORY_START')).trim();
+      const after=remaining.substring(remaining.indexOf('STORY_END')+9).trim();
+      if(before)result.segments.push({type:'text',content:before});
+      result.segments.push({type:'story',content:sm[1].trim()});
+      remaining=after;
     }
   }
-  const vocabLines = [];
-  remaining = remaining.replace(/VOCAB:\s*([^|]+)\|([^|]+)\|(.+?)(?:\n|$)/g, (m, w, d, ex) => {
-    vocabLines.push({ word: w.trim(), def: d.trim(), example: ex.trim() }); return '';
-  });
-  const questions = [];
-  remaining = remaining.replace(/Q[123]:\s*(.+?)(?:\n|$)/g, (m, q) => {
-    questions.push(q.trim()); return '';
-  });
-  const clean = remaining.trim();
-  if (clean) result.segments.push({ type: 'text', content: clean });
-  if (vocabLines.length) result.segments.push({ type: 'vocab', items: vocabLines });
-  if (questions.length) result.segments.push({ type: 'questions', items: questions });
-  if (!result.segments.length) result.segments.push({ type: 'text', content: text.replace(/XP_REWARD:.+/g,'').trim() });
+  const vocabLines=[];
+  remaining=remaining.replace(/VOCAB:\s*([^|]+)\|([^|]+)\|(.+?)(?:\n|$)/g,(m,w,d,ex)=>{vocabLines.push({word:w.trim(),def:d.trim(),example:ex.trim()});return '';});
+  const questions=[];
+  remaining=remaining.replace(/Q[123]:\s*(.+?)(?:\n|$)/g,(m,q)=>{questions.push(q.trim());return '';});
+  const clean=remaining.trim();
+  if(clean)result.segments.push({type:'text',content:clean});
+  if(vocabLines.length)result.segments.push({type:'vocab',items:vocabLines});
+  if(questions.length)result.segments.push({type:'questions',items:questions});
+  if(!result.segments.length)result.segments.push({type:'text',content:text.replace(/XP_REWARD:.+/g,'').trim()});
   return result;
 }
 
-// ── DISPLAY ───────────────────────────────────────────────
-function displayParsedResponse(parsed) {
-  for (const seg of parsed.segments) {
-    if (seg.type === 'text' && seg.content) appendMsg('tutor', seg.content);
-    else if (seg.type === 'story')     appendStory(seg.content);
-    else if (seg.type === 'vocab')     appendVocab(seg.items);
-    else if (seg.type === 'questions') appendQuestions(seg.items);
+function displayParsedResponse(parsed){
+  for(const seg of parsed.segments){
+    if(seg.type==='text'&&seg.content)appendMsg('tutor',seg.content);
+    else if(seg.type==='story')appendStory(seg.content);
+    else if(seg.type==='vocab')appendVocab(seg.items);
+    else if(seg.type==='questions')appendQuestions(seg.items);
   }
 }
-function fmt(t) {
-  return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
-}
-function appendMsg(role, text) {
-  const win = document.getElementById('chat-window');
-  const div = document.createElement('div'); div.className = 'msg ' + role;
-  const av = document.createElement('div'); av.className = 'msg-avatar';
-  av.textContent = role === 'tutor' ? 'T' : STATE.studentName.charAt(0).toUpperCase();
-  const bub = document.createElement('div'); bub.className = 'msg-bubble';
-  bub.innerHTML = fmt(text);
-  div.appendChild(av); div.appendChild(bub); win.appendChild(div); scrollChat();
-}
-function appendStory(content) {
-  const win = document.getElementById('chat-window');
-  const div = document.createElement('div'); div.className = 'msg tutor';
-  const av = document.createElement('div'); av.className = 'msg-avatar'; av.textContent = 'T';
-  const card = document.createElement('div'); card.className = 'story-card';
-  const title = document.createElement('div'); title.className = 'story-title'; title.textContent = '📖 Read This';
-  const body = document.createElement('div'); body.innerHTML = fmt(content);
-  card.appendChild(title); card.appendChild(body);
-  div.appendChild(av); div.appendChild(card); win.appendChild(div); scrollChat();
-}
-function appendVocab(items) {
-  const win = document.getElementById('chat-window');
-  const wrap = document.createElement('div'); wrap.style.paddingLeft = '46px';
-  const lbl = document.createElement('div');
-  lbl.style.cssText = 'font-size:0.72rem;font-weight:700;color:#e8701e;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;';
-  lbl.textContent = '🔑 Vocab Spotlight'; wrap.appendChild(lbl);
-  for (const item of items) {
-    const c = document.createElement('div'); c.className = 'vocab-card';
-    c.innerHTML = `<div class="vocab-word">${item.word}</div><div class="vocab-def">${item.def}<br><em style="color:#8a7d6b;font-size:0.85em">"${item.example}"</em></div>`;
-    wrap.appendChild(c);
-  }
-  win.appendChild(wrap); scrollChat();
-}
-function appendQuestions(items) {
-  const win = document.getElementById('chat-window');
-  const wrap = document.createElement('div'); wrap.style.paddingLeft = '46px';
-  items.forEach((q, i) => {
-    const c = document.createElement('div'); c.className = 'q-card';
-    c.innerHTML = `<div class="q-label">Question ${i+1}</div>${q}`;
-    wrap.appendChild(c);
-  });
-  win.appendChild(wrap); scrollChat();
-}
-function showTyping() {
-  const win = document.getElementById('chat-window');
-  const div = document.createElement('div'); div.className = 'msg tutor';
-  const av = document.createElement('div'); av.className = 'msg-avatar'; av.textContent = 'T';
-  const ind = document.createElement('div'); ind.className = 'typing-indicator';
-  ind.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
-  div.appendChild(av); div.appendChild(ind); win.appendChild(div); scrollChat();
-  return div;
-}
-function scrollChat() { const w = document.getElementById('chat-window'); w.scrollTop = w.scrollHeight; }
 
-// ── XP & STATS ────────────────────────────────────────────
-function addXP(amount, reason) {
-  STATE.xp += amount; STATE.stars += 1;
-  const win = document.getElementById('chat-window');
-  const div = document.createElement('div'); div.className = 'reward-pop';
-  div.innerHTML = `⚡ +${amount} XP — ${reason} ⭐`;
-  win.appendChild(div);
-  updateXPBar(); updateStatsBar(); scrollChat();
+function fmt(t){return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');}
+
+function appendMsg(role,text){
+  const win=document.getElementById('chat-window');
+  const div=document.createElement('div');div.className='msg '+role;
+  const av=document.createElement('div');av.className='msg-avatar';av.textContent=role==='tutor'?'T':STATE.studentName.charAt(0).toUpperCase();
+  const bub=document.createElement('div');bub.className='msg-bubble';bub.innerHTML=fmt(text);
+  div.appendChild(av);div.appendChild(bub);win.appendChild(div);scrollChat();
 }
-function updateXPBar() {
-  document.getElementById('xp-fill').style.width = Math.min(STATE.xp % 100, 100) + '%';
-  document.getElementById('xp-count').textContent = STATE.xp + ' XP';
+
+function appendStory(content){
+  const win=document.getElementById('chat-window');
+  const div=document.createElement('div');div.className='msg tutor';
+  const av=document.createElement('div');av.className='msg-avatar';av.textContent='T';
+  const card=document.createElement('div');card.className='story-card';
+  const title=document.createElement('div');title.className='story-title';title.textContent='📖 Read This';
+  const body=document.createElement('div');body.innerHTML=fmt(content);
+  card.appendChild(title);card.appendChild(body);div.appendChild(av);div.appendChild(card);win.appendChild(div);scrollChat();
 }
-function updateStatsBar() {
-  document.getElementById('stat-subject').textContent = SUBJECTS[STATE.currentSubject].label;
-  document.getElementById('stat-mode').textContent = STATE.currentMode.charAt(0).toUpperCase() + STATE.currentMode.slice(1);
-  document.getElementById('stat-stars').textContent = STATE.stars;
-  document.getElementById('stat-streak').textContent = STATE.streakDays + ' day' + (STATE.streakDays !== 1 ? 's' : '');
+
+function appendVocab(items){
+  const win=document.getElementById('chat-window');
+  const wrap=document.createElement('div');wrap.style.paddingLeft='46px';
+  const lbl=document.createElement('div');lbl.style.cssText='font-size:0.72rem;font-weight:700;color:#e8701e;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;';lbl.textContent='🔑 Vocab Spotlight';wrap.appendChild(lbl);
+  for(const item of items){const c=document.createElement('div');c.className='vocab-card';c.innerHTML=`<div class="vocab-word">${item.word}</div><div class="vocab-def">${item.def}<br><em style="color:#8a7d6b;font-size:0.85em">"${item.example}"</em></div>`;wrap.appendChild(c);}
+  win.appendChild(wrap);scrollChat();
+}
+
+function appendQuestions(items){
+  const win=document.getElementById('chat-window');
+  const wrap=document.createElement('div');wrap.style.paddingLeft='46px';
+  items.forEach((q,i)=>{const c=document.createElement('div');c.className='q-card';c.innerHTML=`<div class="q-label">Question ${i+1}</div>${q}`;wrap.appendChild(c);});
+  win.appendChild(wrap);scrollChat();
+}
+
+function showTyping(){
+  const win=document.getElementById('chat-window');
+  const div=document.createElement('div');div.className='msg tutor';
+  const av=document.createElement('div');av.className='msg-avatar';av.textContent='T';
+  const ind=document.createElement('div');ind.className='typing-indicator';ind.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  div.appendChild(av);div.appendChild(ind);win.appendChild(div);scrollChat();return div;
+}
+
+function scrollChat(){const w=document.getElementById('chat-window');w.scrollTop=w.scrollHeight;}
+
+function addXP(amount,reason){
+  STATE.xp+=amount;STATE.stars+=1;
+  const win=document.getElementById('chat-window');
+  const div=document.createElement('div');div.className='reward-pop';div.innerHTML=`⚡ +${amount} XP — ${reason} ⭐`;
+  win.appendChild(div);updateXPBar();updateStatsBar();scrollChat();
+}
+
+function updateXPBar(){
+  document.getElementById('xp-fill').style.width=Math.min(STATE.xp%100,100)+'%';
+  document.getElementById('xp-count').textContent=STATE.xp+' XP';
+}
+
+function updateStatsBar(){
+  document.getElementById('stat-subject').textContent=SUBJECTS[STATE.currentSubject].label;
+  document.getElementById('stat-mode').textContent=STATE.currentMode.charAt(0).toUpperCase()+STATE.currentMode.slice(1);
+  document.getElementById('stat-stars').textContent=STATE.stars;
+  document.getElementById('stat-streak').textContent=STATE.streakDays+' day'+(STATE.streakDays!==1?'s':'');
 }
 </script>
 </body>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jack's Progress — Parent Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap');
+  :root {
+    --bg:#f7f4ef; --surface:#ffffff; --surface2:#f2ede4; --border:#e0d8cc;
+    --text:#1a1208; --text2:#5c5040; --text3:#8a7d6b;
+    --rust:#c4521a; --orange:#e8701e; --gold:#d4880a;
+    --green:#2d6b1e; --green-light:#eaf4e3;
+    --red:#c0392b; --red-light:#fdf0ee;
+    --blue:#2057a0; --blue-light:#eef3fc;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Barlow',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  .layout { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+  .sidebar { background:var(--text); color:#e0d0b8; display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .sidebar-logo { padding:22px 20px 18px; border-bottom:1px solid rgba(255,255,255,0.07); }
+  .sidebar-logo .title { font-family:'Barlow Condensed',sans-serif; font-size:1.4rem; font-weight:900; color:var(--orange); text-transform:uppercase; }
+  .sidebar-logo .sub { font-size:0.7rem; color:#6b5e4a; letter-spacing:1.5px; text-transform:uppercase; margin-top:2px; }
+  .sidebar-student { padding:14px 20px; border-bottom:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; gap:10px; }
+  .student-avatar { width:40px; height:40px; background:var(--rust); border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Barlow Condensed',sans-serif; font-size:1.3rem; font-weight:900; color:white; flex-shrink:0; }
+  .student-info .name { font-weight:700; font-size:0.95rem; color:#f0e0c0; }
+  .student-info .detail { font-size:0.72rem; color:#6b5e4a; }
+  .nav-section { padding:10px 0; }
+  .nav-label { font-size:0.62rem; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4a3e2e; padding:0 20px; margin-bottom:3px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 20px; font-size:0.86rem; color:#a09070; cursor:pointer; transition:all 0.15s; border-left:3px solid transparent; }
+  .nav-item:hover { color:#f0e0c0; background:rgba(255,255,255,0.04); }
+  .nav-item.active { color:var(--orange); border-left-color:var(--orange); background:rgba(232,112,30,0.08); }
+  .sidebar-bottom { margin-top:auto; padding:14px 20px; border-top:1px solid rgba(255,255,255,0.07); font-size:0.7rem; color:#4a3e2e; }
+  .main { padding:26px 30px; overflow-y:auto; }
+  .page { display:none; } .page.active { display:block; }
+  .page-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:22px; flex-wrap:wrap; gap:12px; }
+  .page-title { font-family:'Barlow Condensed',sans-serif; font-size:1.7rem; font-weight:900; text-transform:uppercase; letter-spacing:-0.3px; }
+  .page-sub { font-size:0.83rem; color:var(--text3); margin-top:2px; }
+  .btn-primary { background:var(--rust); color:white; border:none; border-radius:6px; font-family:'Barlow Condensed',sans-serif; font-size:0.88rem; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; padding:9px 16px; cursor:pointer; transition:background 0.2s; display:inline-flex; align-items:center; gap:6px; }
+  .btn-primary:hover { background:var(--orange); }
+  .btn-primary:disabled { background:#ccc; cursor:not-allowed; }
+  .btn-secondary { background:var(--surface); color:var(--text2); border:1.5px solid var(--border); border-radius:6px; font-size:0.85rem; padding:8px 14px; cursor:pointer; transition:all 0.2s; font-family:'Barlow',sans-serif; }
+  .btn-secondary:hover { border-color:var(--rust); color:var(--rust); }
+  .cards-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:22px; }
+  .stat-card { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:16px 18px; }
+  .stat-card .card-icon { font-size:1.3rem; margin-bottom:4px; }
+  .stat-card .card-label { font-size:0.7rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text3); }
+  .stat-card .card-val { font-family:'Barlow Condensed',sans-serif; font-size:1.9rem; font-weight:900; color:var(--text); line-height:1; margin:4px 0; }
+  .stat-card .card-note { font-size:0.76rem; color:var(--green); }
+  .stat-card .card-note.neutral { color:var(--text3); }
+  .section-title { font-family:'Barlow Condensed',sans-serif; font-size:1.05rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text); margin-bottom:12px; }
+  .subject-list { display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+  .subject-row { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; padding:13px 15px; }
+  .subject-row-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+  .subject-name { display:flex; align-items:center; gap:7px; font-weight:600; font-size:0.9rem; }
+  .subject-pct { font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:700; }
+  .progress-track { height:7px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+  .progress-fill { height:100%; border-radius:4px; transition:width 1s ease; }
+  .fill-green  { background:linear-gradient(90deg,#2d8a1e,#4db040); }
+  .fill-blue   { background:linear-gradient(90deg,#2057a0,#3b88d8); }
+  .fill-orange { background:linear-gradient(90deg,#c4521a,#e8701e); }
+  .fill-purple { background:linear-gradient(90deg,#6b3fa0,#9b6fd0); }
+  .fill-gold   { background:linear-gradient(90deg,#d4880a,#f0b030); }
+  .fill-teal   { background:linear-gradient(90deg,#0d7a74,#1ab8b0); }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:22px; }
+  .info-pill { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; padding:15px 17px; }
+  .pill-title { font-family:'Barlow Condensed',sans-serif; font-size:0.88rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .pill-title.strength { color:var(--green); }
+  .pill-title.next { color:var(--blue); }
+  .pill-list { list-style:none; display:flex; flex-direction:column; gap:7px; }
+  .pill-list li { font-size:0.84rem; color:var(--text2); display:flex; align-items:flex-start; gap:7px; line-height:1.4; }
+  .pill-list li::before { content:'▸'; font-size:0.68rem; padding-top:2px; flex-shrink:0; }
+  .pill-list.strength li::before { color:var(--green); }
+  .pill-list.next li::before { color:var(--blue); }
+  .report-box { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:22px; }
+  .report-header { padding:13px 17px; background:var(--surface2); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .report-body { padding:16px 18px; font-size:0.88rem; color:var(--text2); line-height:1.65; min-height:80px; }
+  .session-log { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:22px; }
+  .log-header { padding:13px 17px; border-bottom:1px solid var(--border); font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; display:flex; justify-content:space-between; align-items:center; }
+  .log-body { max-height:360px; overflow-y:auto; }
+  .log-entry { padding:9px 17px; font-size:0.84rem; border-bottom:1px solid var(--surface2); display:flex; gap:10px; align-items:flex-start; }
+  .log-entry:last-child { border-bottom:none; }
+  .log-role { font-weight:700; min-width:48px; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.5px; padding-top:1px; flex-shrink:0; }
+  .log-role.student { color:var(--green); }
+  .log-role.tutor   { color:var(--blue); }
+  .log-text { color:var(--text2); line-height:1.4; flex:1; }
+  .log-time { color:var(--text3); font-size:0.7rem; white-space:nowrap; }
+  .log-subject { font-size:0.68rem; background:var(--surface2); color:var(--text3); border-radius:3px; padding:1px 5px; white-space:nowrap; }
+  .parent-chat-window { background:var(--surface); border:1.5px solid var(--border); border-radius:8px; min-height:280px; max-height:380px; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; margin-bottom:12px; scroll-behavior:smooth; }
+  .p-msg { display:flex; gap:9px; animation:fadeIn 0.25s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+  .p-msg.user { flex-direction:row-reverse; }
+  .p-avatar { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.82rem; font-weight:700; flex-shrink:0; }
+  .p-msg.tutor .p-avatar { background:var(--rust); color:white; }
+  .p-msg.user  .p-avatar { background:var(--blue); color:white; }
+  .p-bubble { max-width:80%; padding:9px 13px; border-radius:8px; font-size:0.86rem; line-height:1.5; }
+  .p-msg.tutor .p-bubble { background:var(--surface2); color:var(--text); border-radius:2px 8px 8px 8px; }
+  .p-msg.user  .p-bubble { background:var(--blue); color:white; border-radius:8px 2px 8px 8px; }
+  .parent-input-row { display:flex; gap:8px; }
+  .parent-input { flex:1; background:var(--surface); border:1.5px solid var(--border); border-radius:6px; font-family:'Barlow',sans-serif; font-size:0.88rem; padding:9px 13px; color:var(--text); outline:none; transition:border-color 0.2s; }
+  .parent-input:focus { border-color:var(--rust); }
+  .alert-banner { background:#fff8e1; border:1.5px solid #f0c040; border-radius:8px; padding:11px 15px; font-size:0.86rem; color:#7a5c00; display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .sync-status { display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; }
+  .sdot { width:7px; height:7px; border-radius:50%; background:#ccc; flex-shrink:0; }
+  .sdot.syncing { background:var(--gold); animation:pulse 1s infinite; }
+  .sdot.ok { background:var(--green); }
+  .sdot.err { background:var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .empty-state { text-align:center; padding:36px 20px; color:var(--text3); font-size:0.88rem; }
+  .empty-icon { font-size:2.2rem; margin-bottom:10px; }
+  .dot { display:inline-block; width:6px; height:6px; background:var(--text3); border-radius:50%; animation:bdot 1.2s infinite; }
+  .dot:nth-child(2){animation-delay:0.2s} .dot:nth-child(3){animation-delay:0.4s}
+  @keyframes bdot { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-4px)} }
+  .hidden { display:none !important; }
+  .header-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .toast { position:fixed; bottom:22px; right:22px; background:var(--text); color:var(--bg); padding:11px 17px; border-radius:8px; font-size:0.86rem; z-index:9999; animation:fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="title">Parent Hub</div>
+      <div class="sub">Jack's Learning Dashboard</div>
+    </div>
+    <div class="sidebar-student">
+      <div class="student-avatar">J</div>
+      <div class="student-info">
+        <div class="name" id="sidebar-name">Jack</div>
+        <div class="detail">Year 7 · Age 12</div>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="showPage('overview',this)">📊 Dashboard</div>
+      <div class="nav-item" onclick="showPage('sessions',this)">🕐 Session Log</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Reports</div>
+      <div class="nav-item" onclick="showPage('report',this)">📋 AI Report</div>
+      <div class="nav-item" onclick="showPage('chat',this)">💬 Ask the Tutor</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <div class="nav-item" onclick="showPage('settings',this)">⚙️ Settings</div>
+    </div>
+    <div class="sidebar-bottom">
+      Last sync: <span id="last-sync">Never</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub" id="overview-date"></div>
+        </div>
+        <div class="header-actions">
+          <div class="sync-status"><div class="sdot" id="sdot"></div><span id="slabel">Not synced</span></div>
+          <button class="btn-secondary" onclick="syncAll()">🔄 Sync Now</button>
+          <button class="btn-primary" onclick="showPage('report',null);generateReport()">📋 Generate Report</button>
+        </div>
+      </div>
+      <div id="no-data-alert" class="alert-banner hidden">⚠️ No data found yet. Make sure Jack has used his Learning App, then click Sync Now.</div>
+      <div class="cards-grid">
+        <div class="stat-card"><div class="card-icon">⚡</div><div class="card-label">Total XP</div><div class="card-val" id="kpi-xp">—</div><div class="card-note neutral" id="kpi-xp-n">—</div></div>
+        <div class="stat-card"><div class="card-icon">⭐</div><div class="card-label">Stars Earned</div><div class="card-val" id="kpi-stars">—</div><div class="card-note neutral" id="kpi-stars-n">—</div></div>
+        <div class="stat-card"><div class="card-icon">🔥</div><div class="card-label">Day Streak</div><div class="card-val" id="kpi-streak">—</div><div class="card-note neutral">Keep it going!</div></div>
+        <div class="stat-card"><div class="card-icon">📖</div><div class="card-label">Reading Level</div><div class="card-val" id="kpi-level">—</div><div class="card-note" id="kpi-level-n">—</div></div>
+      </div>
+      <div class="two-col">
+        <div class="info-pill">
+          <div class="pill-title strength">✅ Strengths</div>
+          <ul class="pill-list strength" id="strengths-list"><li>Sync data to see Jack's strengths</li></ul>
+        </div>
+        <div class="info-pill">
+          <div class="pill-title next">🎯 Next Session Focus</div>
+          <ul class="pill-list next" id="next-list"><li>Sync data to see recommendations</li></ul>
+        </div>
+      </div>
+      <div class="section-title">Subject Engagement</div>
+      <div class="subject-list" id="subject-bars">
+        <div class="empty-state"><div class="empty-icon">📚</div>Sync Jack's data to see subject progress</div>
+      </div>
+    </div>
+
+    <!-- SESSION LOG -->
+    <div class="page" id="page-sessions">
+      <div class="page-header">
+        <div><div class="page-title">Session Log</div><div class="page-sub">Full conversation history</div></div>
+        <div class="header-actions">
+          <button class="btn-secondary" onclick="syncAll()">🔄 Sync</button>
+          <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="clearLog()">🗑 Clear Log</button>
+        </div>
+      </div>
+      <div class="session-log">
+        <div class="log-header"><span>📝 Conversations</span><span id="log-count" style="font-size:0.75rem;color:var(--text3);font-family:'Barlow',sans-serif;font-weight:400;"></span></div>
+        <div class="log-body" id="log-body"><div class="empty-state">No sessions yet. Sync after Jack uses his app.</div></div>
+      </div>
+    </div>
+
+    <!-- AI REPORT -->
+    <div class="page" id="page-report">
+      <div class="page-header">
+        <div><div class="page-title">AI Progress Report</div><div class="page-sub">Generated summary of Jack's sessions</div></div>
+        <button class="btn-primary" id="gen-btn" onclick="generateReport()">✨ Generate Report</button>
+      </div>
+      <div class="report-box">
+        <div class="report-header">
+          <div class="section-title" style="margin:0;">Session Summary</div>
+          <span id="report-ts" style="font-size:0.75rem;color:var(--text3);">Not yet generated</span>
+        </div>
+        <div class="report-body" id="report-body">Click "Generate Report" to get an AI-written summary of Jack's recent sessions — what was covered, how he engaged, observed strengths, and recommended focus areas.</div>
+      </div>
+      <div class="two-col" id="report-extras" style="display:none;">
+        <div class="info-pill">
+          <div class="pill-title strength">✅ What Went Well</div>
+          <ul class="pill-list strength" id="report-strengths"></ul>
+        </div>
+        <div class="info-pill">
+          <div class="pill-title next">🎯 Next Session Focus</div>
+          <ul class="pill-list next" id="report-next"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="page" id="page-chat">
+      <div class="page-header">
+        <div><div class="page-title">Ask the Tutor</div><div class="page-sub">Ask anything about Jack's progress or get advice</div></div>
+      </div>
+      <div class="parent-chat-window" id="pchat"></div>
+      <div class="parent-input-row">
+        <input class="parent-input" id="pinput" placeholder="Ask about Jack's progress, get tips, set goals..." onkeydown="if(event.key==='Enter')sendParentMsg()" />
+        <button class="btn-primary" onclick="sendParentMsg()">Send →</button>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div><div class="page-sub">Jack's learning profile</div></div>
+      </div>
+      <div class="report-box">
+        <div class="report-header"><div class="section-title" style="margin:0;">Student Profile</div></div>
+        <div class="report-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:0.88rem;">
+            <div><label style="display:block;font-size:0.7rem;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Student Name</label>
+            <input id="s-name" type="text" value="Jack" style="width:100%;border:1.5px solid var(--border);border-radius:5px;padding:8px 11px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);outline:none;"/></div>
+            <div><label style="display:block;font-size:0.7rem;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Year Level</label>
+            <input id="s-year" type="number" value="7" min="1" max="13" style="width:100%;border:1.5px solid var(--border);border-radius:5px;padding:8px 11px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);outline:none;"/></div>
+            <div><label style="display:block;font-size:0.7rem;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Interests</label>
+            <input id="s-interests" type="text" value="rugby, hunting, motorbikes" style="width:100%;border:1.5px solid var(--border);border-radius:5px;padding:8px 11px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);outline:none;"/></div>
+            <div><label style="display:block;font-size:0.7rem;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Reading Level (Year)</label>
+            <input id="s-reading" type="number" value="6" min="1" max="13" style="width:100%;border:1.5px solid var(--border);border-radius:5px;padding:8px 11px;font-family:'Barlow',sans-serif;font-size:0.9rem;color:var(--text);background:var(--surface);outline:none;"/></div>
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+            <button class="btn-secondary" onclick="syncAll()">🔄 Sync Data</button>
+            <button class="btn-secondary" onclick="exportData()">📤 Export JSON</button>
+            <button class="btn-secondary" style="color:var(--red);border-color:var(--red);" onclick="clearAll()">🗑 Clear All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbzMbp2jP4QKzkCvLCo0nqZUUjw7RQzxfUQm4-XrNssNsmH3NFmQQwQ0PMNDjz_KIn4_Gg/exec";
+
+const DASH = {
+  progress: null,
+  log: [],
+  parentHistory: [],
+};
+
+const SUBJECT_CFG = {
+  literacy: { label:'Reading & Writing', icon:'📖', color:'fill-orange', desc:'Reading, spelling, writing' },
+  maths:    { label:'Maths',             icon:'🔢', color:'fill-blue',   desc:'Number, algebra, measurement' },
+  science:  { label:'Science',           icon:'🔬', color:'fill-green',  desc:'Living world, physical world' },
+  social:   { label:'Social Studies',    icon:'🌏', color:'fill-purple', desc:'NZ history, geography, culture' },
+  health:   { label:'Health & PE',       icon:'💪', color:'fill-teal',   desc:'Physical activity, wellbeing' },
+  tech:     { label:'Tech & DT',         icon:'🔧', color:'fill-gold',   desc:'Design, technology, mechanics' },
+};
+
+// ── NAV ──────────────────────────────────────────────────
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ── SYNC ─────────────────────────────────────────────────
+function setSync(status, msg) {
+  document.getElementById('sdot').className = 'sdot ' + status;
+  document.getElementById('slabel').textContent = msg;
+}
+
+async function syncAll() {
+  setSync('syncing', 'Syncing...');
+  try {
+    // Load progress stats
+    const res1 = await fetch(SHEETS_URL + '?action=load');
+    const prog = await res1.json();
+    DASH.progress = prog;
+
+    // Load session log
+    const res2 = await fetch(SHEETS_URL + '?action=log');
+    const logData = await res2.json();
+    DASH.log = logData.log || [];
+
+    setSync('ok', 'Synced · ' + new Date().toLocaleTimeString('en-NZ'));
+    document.getElementById('last-sync').textContent = new Date().toLocaleTimeString('en-NZ');
+    document.getElementById('no-data-alert').classList.add('hidden');
+
+    renderDashboard();
+    renderLog();
+    showToast('✅ Synced successfully!');
+
+  } catch(e) {
+    setSync('err', 'Sync failed');
+    document.getElementById('no-data-alert').classList.remove('hidden');
+    showToast('❌ Sync failed — check connection');
+  }
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────
+function renderDashboard() {
+  const p = DASH.progress;
+  if (!p || !p.found) {
+    document.getElementById('no-data-alert').classList.remove('hidden');
+    return;
+  }
+
+  document.getElementById('overview-date').textContent =
+    'Last session: ' + (p.lastSaved ? new Date(p.lastSaved).toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long'}) : 'Unknown');
+  document.getElementById('sidebar-name').textContent = p.studentName || 'Jack';
+
+  document.getElementById('kpi-xp').textContent    = p.xp || 0;
+  document.getElementById('kpi-xp-n').textContent  = (p.xp || 0) + ' total XP earned';
+  document.getElementById('kpi-stars').textContent  = p.stars || 0;
+  document.getElementById('kpi-stars-n').textContent = (p.stars || 0) + ' activities done';
+  document.getElementById('kpi-streak').textContent = (p.streakDays || 0) + 'd';
+  document.getElementById('kpi-level').textContent  = 'Yr ' + (p.readingLevel || 6);
+  const lvl = parseInt(p.readingLevel) || 6;
+  document.getElementById('kpi-level-n').textContent = lvl >= 7 ? '↑ On track' : 'Building up';
+  document.getElementById('kpi-level-n').className  = 'card-note' + (lvl >= 7 ? '' : ' neutral');
+
+  // Subject bars from log
+  const eng = analyseEngagement(DASH.log);
+  renderSubjectBars(eng);
+
+  // Strengths & next
+  const strengths = buildStrengths(p, eng);
+  const nexts = buildNext(p, eng);
+  document.getElementById('strengths-list').innerHTML = strengths.map(s=>`<li>${s}</li>`).join('');
+  document.getElementById('next-list').innerHTML = nexts.map(n=>`<li>${n}</li>`).join('');
+}
+
+function analyseEngagement(log) {
+  const counts = { literacy:0, maths:0, science:0, social:0, health:0, tech:0 };
+  for (const e of log) {
+    const subj = (e.subject || '').toLowerCase();
+    if (counts[subj] !== undefined) counts[subj]++;
+    else {
+      const t = (e.text || '').toLowerCase();
+      if (t.includes('spell')||t.includes('read')||t.includes('writ')||t.includes('vocab')) counts.literacy++;
+      if (t.includes('math')||t.includes('number')||t.includes('algebra')) counts.maths++;
+      if (t.includes('science')||t.includes('biology')) counts.science++;
+    }
+  }
+  // Literacy gets baseline boost
+  counts.literacy = Math.max(counts.literacy, Math.floor(log.length * 0.4));
+  return counts;
+}
+
+function renderSubjectBars(eng) {
+  const container = document.getElementById('subject-bars');
+  const max = Math.max(...Object.values(eng), 1);
+  container.innerHTML = '';
+  Object.entries(SUBJECT_CFG).forEach(([key, cfg]) => {
+    const count = eng[key] || 0;
+    const pct = Math.min(Math.round((count / max) * 100), 100);
+    const el = document.createElement('div'); el.className = 'subject-row';
+    el.innerHTML = `
+      <div class="subject-row-top">
+        <div class="subject-name">${cfg.icon} ${cfg.label}</div>
+        <div class="subject-pct">${count > 0 ? pct + '%' : 'Not started'}</div>
+      </div>
+      <div style="font-size:0.73rem;color:var(--text3);margin-bottom:6px;">${cfg.desc}</div>
+      <div class="progress-track"><div class="progress-fill ${cfg.color}" style="width:${pct}%"></div></div>`;
+    container.appendChild(el);
+  });
+}
+
+function buildStrengths(p, eng) {
+  const s = [];
+  if ((p.xp||0) > 0) s.push(`Earned ${p.xp} XP — actively engaging with sessions`);
+  if ((p.stars||0) > 2) s.push(`Completed ${p.stars} activities — building real momentum`);
+  if ((p.streakDays||0) > 1) s.push(`${p.streakDays}-day streak — showing great consistency`);
+  if ((p.readingLevel||6) >= 6) s.push(`Reading at Year ${p.readingLevel} level and building`);
+  if (eng.literacy > 3) s.push('Strong engagement with literacy tasks');
+  if (!s.length) s.push('Ready to start — sync after first session');
+  return s;
+}
+
+function buildNext(p, eng) {
+  const n = [];
+  const lvl = parseInt(p.readingLevel) || 6;
+  if (lvl < 7) n.push('Continue building reading fluency with interest-based stories');
+  if ((p.stars||0) < 3) n.push('Complete more spelling activities to build confidence');
+  if (eng.maths < 2) n.push('Introduce maths through real contexts — fuel costs, rugby stats');
+  n.push('Practise writing full sentences with correct punctuation');
+  n.push('Expand vocabulary using words from his interest areas');
+  return n.slice(0,4);
+}
+
+// ── SESSION LOG ───────────────────────────────────────────
+function renderLog() {
+  const body = document.getElementById('log-body');
+  const log = DASH.log;
+  document.getElementById('log-count').textContent = log.length + ' entries';
+
+  if (!log.length) {
+    body.innerHTML = '<div class="empty-state">No sessions yet.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  [...log].reverse().slice(0,80).forEach(e => {
+    const div = document.createElement('div'); div.className = 'log-entry';
+    const time = e.time ? new Date(e.time).toLocaleString('en-NZ',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}) : '';
+    const preview = (e.text||'').substring(0,130) + ((e.text||'').length > 130 ? '…' : '');
+    div.innerHTML = `
+      <div class="log-role ${e.role==='student'?'student':'tutor'}">${e.role==='student'?'Jack':'Tutor'}</div>
+      <div class="log-text">${esc(preview)}</div>
+      ${e.subject ? `<div class="log-subject">${e.subject}</div>` : ''}
+      <div class="log-time">${time}</div>`;
+    body.appendChild(div);
+  });
+}
+
+// ── AI REPORT ─────────────────────────────────────────────
+async function generateReport() {
+  const btn = document.getElementById('gen-btn');
+  const body = document.getElementById('report-body');
+  btn.disabled = true; btn.textContent = '⏳ Writing...';
+  body.innerHTML = '<span style="color:var(--text3);font-style:italic;">AI is writing the report <span class="dot"></span><span class="dot"></span><span class="dot"></span></span>';
+
+  const p = DASH.progress;
+  const log = DASH.log;
+  const studentMsgs = log.filter(e=>e.role==='student').map(e=>e.text).slice(-10);
+  const tutorMsgs   = log.filter(e=>e.role==='tutor').map(e=>e.text).slice(-5);
+
+  const summary = `
+Student: ${p?.studentName||'Jack'}, 12 years old, NZ Year 7
+XP: ${p?.xp||0} | Stars: ${p?.stars||0} | Streak: ${p?.streakDays||0} days | Reading Level: Year ${p?.readingLevel||6}
+Total session exchanges: ${log.length}
+Active subjects: ${[...new Set(log.map(e=>e.subject).filter(Boolean))].join(', ')||'literacy'}
+
+Recent student responses:
+${studentMsgs.map((m,i)=>`${i+1}. "${m.substring(0,100)}"`).join('\n')||'No responses yet'}
+
+Recent tutor messages:
+${tutorMsgs.map((m,i)=>`${i+1}. "${m.substring(0,120)}"`).join('\n')||'No messages yet'}`;
+
+  const prompt = `You are an expert tutor writing a progress report for a parent about their 12-year-old son Jack, who is passionate about rugby, hunting, and motorbikes and struggles with literacy.
+
+Session data:
+${summary}
+
+Write a warm, honest, professional progress report for the parent. Include:
+1. A brief overall summary (3–4 sentences) of Jack's engagement and progress
+2. Three specific strengths — start each with STRENGTH:
+3. Three focus areas for next session — start each with NEXT:
+4. Any notable observations about his engagement
+
+Be specific where possible. Tone: encouraging but honest. Speak directly to the parent. Keep it concise.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Could not generate report.';
+
+    const strengths = [], nexts = [];
+    let main = text;
+    text.split('\n').forEach(line => {
+      if (line.startsWith('STRENGTH:')) strengths.push(line.replace('STRENGTH:','').trim());
+      else if (line.startsWith('NEXT:')) nexts.push(line.replace('NEXT:','').trim());
+    });
+    main = text.replace(/STRENGTH:.+/g,'').replace(/NEXT:.+/g,'').trim();
+
+    body.innerHTML = `<p style="line-height:1.7;">${main.replace(/\n\n/g,'</p><p style="line-height:1.7;margin-top:10px;">').replace(/\n/g,'<br>')}</p>`;
+    document.getElementById('report-ts').textContent = new Date().toLocaleString('en-NZ');
+
+    if (strengths.length || nexts.length) {
+      document.getElementById('report-extras').style.display = 'grid';
+      document.getElementById('report-strengths').innerHTML = (strengths.length?strengths:['See summary above']).map(s=>`<li>${s}</li>`).join('');
+      document.getElementById('report-next').innerHTML = (nexts.length?nexts:['See summary above']).map(n=>`<li>${n}</li>`).join('');
+    }
+  } catch(e) {
+    body.innerHTML = 'Error generating report. Check your connection.';
+  }
+  btn.disabled = false; btn.textContent = '✨ Regenerate';
+}
+
+// ── PARENT CHAT ───────────────────────────────────────────
+async function sendParentMsg() {
+  const input = document.getElementById('pinput');
+  const text = input.value.trim(); if (!text) return;
+  input.value = '';
+  appendPMsg('user', text);
+  DASH.parentHistory.push({ role:'user', content:text });
+
+  const pchat = document.getElementById('pchat');
+  const typing = document.createElement('div'); typing.className = 'p-msg tutor';
+  typing.innerHTML = `<div class="p-avatar">T</div><div class="p-bubble" style="display:flex;gap:4px;align-items:center;"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>`;
+  pchat.appendChild(typing); pchat.scrollTop = pchat.scrollHeight;
+
+  const p = DASH.progress;
+  const sys = `You are an expert tutor assistant speaking to a parent about their son Jack, 12 years old, NZ Year 7, who loves rugby, hunting, and motorbikes and struggles with literacy.
+
+Current data: XP=${p?.xp||0}, Stars=${p?.stars||0}, Reading Level=Year ${p?.readingLevel||6}, Streak=${p?.streakDays||0} days, Session entries=${DASH.log.length}
+
+Answer the parent's questions honestly and helpfully. Give practical, specific advice. Under 200 words. Plain language. Warm but professional.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000, system:sys, messages:DASH.parentHistory })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Something went wrong.';
+    typing.remove();
+    appendPMsg('tutor', reply);
+    DASH.parentHistory.push({ role:'assistant', content:reply });
+    if (DASH.parentHistory.length > 20) DASH.parentHistory = DASH.parentHistory.slice(-20);
+  } catch(e) {
+    typing.remove();
+    appendPMsg('tutor','Connection error. Please try again.');
+  }
+}
+
+function appendPMsg(role, text) {
+  const win = document.getElementById('pchat');
+  const div = document.createElement('div'); div.className = 'p-msg ' + role;
+  const av = document.createElement('div'); av.className = 'p-avatar'; av.textContent = role==='tutor'?'T':'P';
+  const bub = document.createElement('div'); bub.className = 'p-bubble';
+  bub.innerHTML = text.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  div.appendChild(av); div.appendChild(bub); win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function saveSettings() {
+  document.getElementById('sidebar-name').textContent = document.getElementById('s-name').value;
+  showToast('✅ Settings saved');
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify({progress:DASH.progress,log:DASH.log},null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jack-progress-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+}
+
+function clearLog() {
+  if (!confirm('Clear the session log display? (Does not delete from Google Sheet)')) return;
+  DASH.log = [];
+  renderLog();
+  showToast('Log cleared from view');
+}
+
+function clearAll() {
+  if (!confirm('Clear all locally cached data?')) return;
+  DASH.progress = null; DASH.log = [];
+  showToast('Local cache cleared. Re-sync to reload.');
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function showToast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('overview-date').textContent =
+    new Date().toLocaleDateString('en-NZ',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  appendPMsg('tutor', `Hi! I'm Jack's AI tutor. I can answer your questions about his progress, explain what we've been working on, or give tips on how to support his learning at home. What would you like to know?`);
+
+  // Auto-sync on load
+  syncAll();
+});
+</script>
+</body>
+</html>
